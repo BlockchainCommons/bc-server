@@ -1,16 +1,76 @@
-# Blockchain Commons `$projectname`
+# Blockchain Commons `bc-server`
 
 <!--Guidelines: https://github.com/BlockchainCommons/secure-template/wiki -->
 
 ### _by $major-authors_
 
-**`$ProjectDescription`** is …
+**BlockchainCommons Server** (bc-server) is a modular lightweight server codebase for use by BlockchainCommons projects.
+
+The goal of this project is to allow any BlockchainCommons project to expose its API as a HTTP service in a standardized and easy way. A project can either re-use this code or intergrate with it by adding a module that makes use of the project.
+
+BlockchainCommons has several projects as commandline tools which could be made more accessible for testing and useful if a server is running that exposes their functionality.
+
+bc-server will expose its functionality using a JSON-RPC interface.
+
+To this end, we have the following requirements:
+
+- A BlockchainCommons command line tool should be able to describe a simple manifest specifying
+  - named endpoints (path and parameters)
+  - the command to be executed when an endpoint is called.
+- The manifest should be written as a rust library and can contain arbitrary logic to process input and generate output.
+  - This library can then be put into a "modules" directory and the server will automatically make its functionality available.
+
+## The bc-server API (How to write a module for bc-server)
+
+- The `modules` folder in the root of the bc-server crate contains all modules.
+- A module is defined as a sub-crate of bc-server. Each modules corresponds to a bc-server crate `feature` and can be enabled/disabled.
+  - Ref. [Specifying Dependencies](cargo/reference/specifying-dependencies.html#specifying-path-dependencies)
+- To create a `new-module` module, run `cargo init --template module/example modules/new-module.
+- In modules, copy and rename the `example` directory.
+  - Rename `example/example.rs`
+  - Ensure that you fill in the following required module functions in `example.rs`:
+    - `make_routes()`: This function generates the routes that will be exposed by your module.
+    - `start_server()`:
+      - Put any startup code required by your module here e.g. initializing a database.
+      - Check for and configure any required dependencies here.
+- In modules/mod.rs, change `mod example` to refer to the name of your module from the previous step.
+- Run `cargo add example-crate` and replace `example-crate` with the name(s) of the crate(s) that your module will use for its functionality.
+  - @todo Modules will be server crate `features` with all dependencies specified with the feature.
+
+## Modules
+
+The following APIs are implemented:
+
+- bc-depository: secure storage and retrieval of binary objects.
+- torgap-demo:
+  - Torgap-demo allows a user to sign objects and serve them an onion service.
+
+## References
+
+- [Core Lightning](https://github.com/ElementsProject/lightning) (aka `lightningd`) has a module/plugin system that will server as a model for BC-Server.
+  - See [A day in the life of a plugin
+    ](https://github.com/ElementsProject/lightning/blob/master/doc/developers-guide/plugin-development/a-day-in-the-life-of-a-plugin.md)
+
+## Bugs
+
+- During compilation you might have to wrestle with: <https://users.rust-lang.org/t/error-e0635-unknown-feature-stdsimd/106445/2>
+
+```
+  Error[E0635]: unknown feature `stdsimd`
+  --> /home/nik/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ahash-0.8.3/src/lib.rs:99:4
+```
+
+- To fix:
+  - `rustup default nightly`
+  - `rm Cargo.lock` (because it will have conflicting versions of ahash)
+
+---
 
 ## Additional Information
 
 The following files contain…
 
-* `$ListOfEssentialDocs`
+- `$ListOfEssentialDocs`
 
 ## Installation Instructions
 
@@ -20,10 +80,10 @@ The following files contain…
 
 ` $projectname` is a reference implementation meant to display the [Gordian Principles](https://github.com/BlockchainCommons/Gordian#gordian-principles), which are philosophical and technical underpinnings to Blockchain Commons' Gordian technology. This includes:
 
-* **Independence.** `how does it demonstrate independence`
-* **Privacy.** `how does it demonstrate privacy`
-* **Resilience.** `how does it demonstrate resilience`
-* **Openness.** `how does it demonstrate openness`
+- **Independence.** `how does it demonstrate independence`
+- **Privacy.** `how does it demonstrate privacy`
+- **Resilience.** `how does it demonstrate resilience`
+- **Openness.** `how does it demonstrate openness`
 
 Blockchain Commons apps do not phone home and do not run ads. Some are available through various app stores; all are available in our code repositories for your usage.
 
@@ -31,7 +91,7 @@ Blockchain Commons apps do not phone home and do not run ads. Some are available
 
 ## Status - Alpha
 
-` $projectname`  is currently under active development and in the alpha testing phase. It should not be used for production tasks until it has had further testing and auditing. See [Blockchain Commons' Development Phases](https://github.com/BlockchainCommons/Community/blob/master/release-path.md).
+` $projectname` is currently under active development and in the alpha testing phase. It should not be used for production tasks until it has had further testing and auditing. See [Blockchain Commons' Development Phases](https://github.com/BlockchainCommons/Community/blob/master/release-path.md).
 
 ### Version History
 
@@ -45,13 +105,13 @@ In most cases, the authors, copyright, and license for each file reside in heade
 
 This table below also establishes provenance (repository of origin, permalink, and commit id) for files included from repositories that are outside of this repo. Contributors to these files are listed in the commit history for each repository, first with changes found in the commit history of this repo, then in changes in the commit history of their repo of their origin.
 
-| File      | From                                                         | Commit                                                       | Authors & Copyright (c)                                | License                                                     |
-| --------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------- |
-| exception-to-the-rule.c or exception-folder | [https://github.com/community/repo-name/PERMALINK](https://github.com/community/repo-name/PERMALINK) | [https://github.com/community/repo-name/commit/COMMITHASH]() | 2020 Exception Author  | [MIT](https://spdx.org/licenses/MIT)                        |
+| File                                        | From                                                                                                 | Commit                                                       | Authors & Copyright (c) | License                              |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------- | ------------------------------------ |
+| exception-to-the-rule.c or exception-folder | [https://github.com/community/repo-name/PERMALINK](https://github.com/community/repo-name/PERMALINK) | [https://github.com/community/repo-name/commit/COMMITHASH]() | 2020 Exception Author   | [MIT](https://spdx.org/licenses/MIT) |
 
 ### Dependencies
 
-To build  `$projectname` you'll need to use the following tools:
+To build `$projectname` you'll need to use the following tools:
 
 - autotools - Gnu Build System from Free Software Foundation ([intro](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html)).
 
@@ -69,9 +129,9 @@ Libraries may be marked as `use` (the current version of the library is used), `
 
 ### Derived from ...
 
-This  `$projectname` project is either derived from or was inspired by:
+This `$projectname` project is either derived from or was inspired by:
 
-- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer)  or from  [community](https://community.com).
+- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com).
 
 ## Subsequent Usage
 
@@ -79,13 +139,13 @@ This  `$projectname` project is either derived from or was inspired by:
 
 These are adaptations, conversions, and wrappers that make `$projectname` available for other languages:
 
-- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer)  or from  [community](https://community.com)(language).
+- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com)(language).
 
 ### Used by ...
 
 These are other projects that directly use `$projectname`:
 
-- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer)  or from  [community](https://community.com)(use OR fork [version] OR include [version]).
+- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com)(use OR fork [version] OR include [version]).
 
 Libraries may be marked as `use` (the current version of our repo is used), `fork` (a specific version of our repo has been forked for usage), or `include` (files from a specific version of our repo have been included).
 
@@ -93,7 +153,7 @@ Libraries may be marked as `use` (the current version of our repo is used), `for
 
 These are other projects that work with or leverage `$projectname`:
 
-- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer)  or from  [community](https://community.com).
+- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com).
 
 ## Financial Support
 
@@ -121,7 +181,7 @@ The best place to talk about Blockchain Commons and its projects is in our GitHu
 
 [**Gordian User Community**](https://github.com/BlockchainCommons/Gordian/discussions). For users of the Gordian reference apps, including [Gordian Coordinator](https://github.com/BlockchainCommons/iOS-GordianCoordinator), [Gordian Seed Tool](https://github.com/BlockchainCommons/GordianSeedTool-iOS), [Gordian Server](https://github.com/BlockchainCommons/GordianServer-macOS), [Gordian Wallet](https://github.com/BlockchainCommons/GordianWallet-iOS), and [SpotBit](https://github.com/BlockchainCommons/spotbit) as well as our whole series of [CLI apps](https://github.com/BlockchainCommons/Gordian/blob/master/Docs/Overview-Apps.md#cli-apps). This is a place to talk about bug reports and feature requests as well as to explore how our reference apps embody the [Gordian Principles](https://github.com/BlockchainCommons/Gordian#gordian-principles).
 
-[**Blockchain Commons Discussions**](https://github.com/BlockchainCommons/Community/discussions). For developers, interns, and patrons of Blockchain Commons, please use the discussions area of the [Community repo](https://github.com/BlockchainCommons/Community) to talk about general Blockchain Commons issues, the intern program, or topics other than those covered by the [Gordian Developer Community](https://github.com/BlockchainCommons/Gordian-Developer-Community/discussions) or the 
+[**Blockchain Commons Discussions**](https://github.com/BlockchainCommons/Community/discussions). For developers, interns, and patrons of Blockchain Commons, please use the discussions area of the [Community repo](https://github.com/BlockchainCommons/Community) to talk about general Blockchain Commons issues, the intern program, or topics other than those covered by the [Gordian Developer Community](https://github.com/BlockchainCommons/Gordian-Developer-Community/discussions) or the
 [Gordian User Community](https://github.com/BlockchainCommons/Gordian/discussions).
 
 ### Other Questions & Problems
@@ -134,9 +194,9 @@ If your company requires support to use our projects, please feel free to contac
 
 The following people directly contributed to this repository. You can add your name here by getting involved. The first step is learning how to contribute from our [CONTRIBUTING.md](./CONTRIBUTING.md) documentation.
 
-| Name              | Role                | Github                                            | Email                                 | GPG Fingerprint                                    |
-| ----------------- | ------------------- | ------------------------------------------------- | ------------------------------------- | -------------------------------------------------- |
-| Christopher Allen | Principal Architect | [@ChristopherA](https://github.com/ChristopherA) | \<ChristopherA@LifeWithAlacrity.com\> | FDFE 14A5 4ECB 30FC 5D22  74EF F8D3 6C91 3574 05ED |
+| Name              | Role                | Github                                           | Email                                 | GPG Fingerprint                                   |
+| ----------------- | ------------------- | ------------------------------------------------ | ------------------------------------- | ------------------------------------------------- |
+| Christopher Allen | Principal Architect | [@ChristopherA](https://github.com/ChristopherA) | \<ChristopherA@LifeWithAlacrity.com\> | FDFE 14A5 4ECB 30FC 5D22 74EF F8D3 6C91 3574 05ED |
 
 ## Responsible Disclosure
 
@@ -150,8 +210,8 @@ Please report suspected security vulnerabilities in private via email to Christo
 
 The following keys may be used to communicate sensitive information to developers:
 
-| Name              | Fingerprint                                        |
-| ----------------- | -------------------------------------------------- |
-| Christopher Allen | FDFE 14A5 4ECB 30FC 5D22  74EF F8D3 6C91 3574 05ED |
+| Name              | Fingerprint                                       |
+| ----------------- | ------------------------------------------------- |
+| Christopher Allen | FDFE 14A5 4ECB 30FC 5D22 74EF F8D3 6C91 3574 05ED |
 
 You can import a key by running the following command with that individual’s fingerprint: `gpg --recv-keys "<fingerprint>"` Ensure that you put quotes around fingerprints that contain spaces.
