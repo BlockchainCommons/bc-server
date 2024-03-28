@@ -1,3 +1,4 @@
+workspace = { members = ["modules/depo"] }
 [package]
 name = "bc-server"
 version = "0.1.0"
@@ -17,3 +18,4 @@ url = "2.4.1"
 log = "0.4.20"
 env_logger = "0.10.1"
 nu-ansi-term = "0.49.0"
+depo = [path = "modules/depo"]
