@@ -1,3 +1,6 @@
+target/
+modules/*/target/
+
 # Created by https://www.gitignore.io/api/macos
 
 ### macOS ###
@@ -87,3 +90,4 @@ Mkfile.old
 dkms.conf
 
 # End of https://www.gitignore.io/api/c
+
