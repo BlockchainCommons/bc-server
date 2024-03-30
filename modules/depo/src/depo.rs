@@ -1,7 +1,7 @@
 // @todo Pass a logger to the module.
 
 use log::{debug, error, info, warn};
-use nu_ansi_term::Color::{Green, Red, Yellow};
+// use nu_ansi_term::Color::{Green, Red, Yellow};
 use warp::{
     filters::BoxedFilter,
     http::StatusCode,
@@ -13,12 +13,11 @@ use warp::{
 const SCHEMA_NAME: &str = "depo";
 pub const API_NAME: &str = "depo";
 
-use crate::api::InvalidBody;
-use crate::modules::depo::function::Depo;
-use crate::modules::depo::{
-    db_depo::{create_db, server_pool},
-    reset_db,
-};
+use bc_server_api::InvalidBody;
+// use crate::modules::depo::function::Depo;
+use depo::Depo;
+// use crate::modules::depo::{
+use depo::{create_db, reset_db, server_pool};
 
 /*
 struct ApiRoute {
