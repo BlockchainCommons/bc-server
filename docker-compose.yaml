@@ -1,0 +1,23 @@
+# https://hub.docker.com/_/mariadb
+services:
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    environment:
+      - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1
+    # ports:
+    #   - 3306:3306
+  bcserver:
+    container_name: bcserver
+    build:
+      context: .
+    ports:
+      - 127.0.0.1:5332:5332
+    volumes:
+      - .:/code/bc-server
+      - ../bc-depo-rust-for-use-in-bc-server:/code/bc-depo-rust-for-use-in-bc-server
+    command: cargo run --all-features
+    environment:
+      - DB_HOST="mariadb"
+    depends_on:
+      - mariadb

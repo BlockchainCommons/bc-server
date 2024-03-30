@@ -14,10 +14,7 @@ const SCHEMA_NAME: &str = "depo";
 pub const API_NAME: &str = "depo";
 
 use bc_server_api::InvalidBody;
-// use crate::modules::depo::function::Depo;
-use depo::Depo;
-// use crate::modules::depo::{
-use depo::{create_db, reset_db, server_pool};
+use depo::{create_db, reset_db, server_pool, Depo};
 
 /*
 struct ApiRoute {
@@ -31,6 +28,8 @@ pub async fn make_routes() -> BoxedFilter<(impl Reply,)> {
     // e.g. /api/depo/ for depo
     // e.g. /api/timestamp/ for timestamp
 
+    dbg!("make_routes");
+    create_db(&server_pool(), SCHEMA_NAME).await;
     // @fixme Why do we need this new_db call?
     let depo = Depo::new_db(SCHEMA_NAME).await.unwrap();
 
@@ -57,7 +56,6 @@ pub async fn make_routes() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub async fn start_server() -> anyhow::Result<()> {
-    create_db(&server_pool(), SCHEMA_NAME).await?;
     let depo = Depo::new_db(SCHEMA_NAME).await?;
 
     info!("Starting Blockchain Commons Depository");
