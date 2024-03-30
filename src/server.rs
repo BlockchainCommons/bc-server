@@ -7,8 +7,7 @@ use warp::{
     Filter,
 };
 
-use crate::modules::depo;
-use crate::modules::torgap;
+use depo_module;
 
 pub async fn start_server(schema_name: &str, port: u16) -> anyhow::Result<()> {
     // @todo Loop through all modules and get routes.
@@ -19,7 +18,7 @@ pub async fn start_server(schema_name: &str, port: u16) -> anyhow::Result<()> {
     let socket_addr = addr.parse::<std::net::SocketAddr>()?;
 
     {
-        depo::start_server().await;
+        depo_module::start_server().await;
         torgap::start_server().await;
     }
 
@@ -32,8 +31,8 @@ async fn make_routes() -> BoxedFilter<(impl Reply,)> {
     let result = {
         let api = warp::path("api");
         let status = status_filter();
-        let depo_route = api.and(warp::path(depo::API_NAME));
-        let depo_route = depo_route.and(depo::make_routes().await);
+        let depo_route = api.and(warp::path(depo_module::API_NAME));
+        let depo_route = depo_route.and(depo_module::make_routes().await);
         let torgap_route = api.and(warp::path(torgap::API_NAME));
         let torgap_route = torgap_route.and(torgap::make_routes().await);
         status.or(depo_route).or(torgap_route)

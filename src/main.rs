@@ -1,6 +1,4 @@
-mod api;
 mod logging;
-mod modules;
 mod server;
 
 use log::error;
