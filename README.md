@@ -20,7 +20,9 @@ To this end, we have the following requirements:
 - The manifest should be written as a rust library and can contain arbitrary logic to process input and generate output.
   - This library can then be put into a "modules" directory and the server will automatically make its functionality available.
 
-## The bc-server API (How to write a module for bc-server)
+## [Work In Progress] The bc-server API (How to write a module for bc-server)
+
+NB. The functionality described in this section is not yet fully implemented. Consider it a description of how we want the module development process to work.
 
 - The `modules` folder in the root of the bc-server crate contains all modules.
 - A module is defined as a sub-crate of bc-server. Each modules corresponds to a bc-server crate `feature` and can be enabled/disabled.
@@ -39,11 +41,31 @@ To this end, we have the following requirements:
 
 ## Modules
 
-The following APIs are implemented:
+The following modules are implemented:
 
-- bc-depository: secure storage and retrieval of binary objects.
-- torgap-demo:
+- [x] bc-depository API:
+  - uses blockchaincommons/bc-depo-rust for secure storage and retrieval of binary objects.
+  - bc-server is based on the bc-depo-rust codebase.
+
+The following APIs are work-in-progress:
+
+- [ ] torgap-demo:
   - Torgap-demo allows a user to sign objects and serve them an onion service.
+- [ ] spotbit
+
+## How to test bc-server
+
+```sh
+mkdir bc && cd bc
+git clone git@github.com:BlockchainCommons/bc-depo-rust.git
+git clone git@github.com:BlockchainCommons/bc-server.git
+docker compose up
+curl -vv  127.0.0.1:5332/api/status
+```
+
+The output log of `docker compose` contains information on what ports and services are running.
+
+## How to deploy bc-server
 
 ## References
 
