@@ -56,9 +56,6 @@ The following APIs are work-in-progress:
 ## How to test bc-server
 
 ```sh
-mkdir bc && cd bc
-git clone git@github.com:BlockchainCommons/bc-depo-rust.git
-git clone git@github.com:BlockchainCommons/bc-server.git
 docker compose up
 curl -vv  127.0.0.1:5332/api/status
 ```

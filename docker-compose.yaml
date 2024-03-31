@@ -15,7 +15,7 @@ services:
       - 127.0.0.1:5332:5332
     volumes:
       - .:/code/bc-server
-      - ../bc-depo-rust-for-use-in-bc-server:/code/bc-depo-rust-for-use-in-bc-server
+      # - ../bc-depo-rust-for-use-in-bc-server:/code/bc-depo-rust-for-use-in-bc-server
     command: cargo run --all-features
     environment:
       - DB_HOST="mariadb"

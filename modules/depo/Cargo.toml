@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# depo = { git = "https://github.com/BlockchainCommons/bc-depo-rust.git" }
-depo = { path = "../../../bc-depo-rust-for-use-in-bc-server" }
+# depo = { path = "../../../bc-depo-rust-for-use-in-bc-server" }
+depo = { git = "https://github.com/BlockchainCommons/bc-depo-rust.git", branch = "for-bc-server" }
 bc-server-api = { path = "../../bc-server-api" }
 bytes = "1.5.0"
 warp = "0.3"
