@@ -13,11 +13,13 @@ services:
       context: .
     ports:
       - 127.0.0.1:5332:5332
+      - 127.0.0.1:1337:1337
     volumes:
       - .:/code/bc-server
       # - ../bc-depo-rust-for-use-in-bc-server:/code/bc-depo-rust-for-use-in-bc-server
-    command: cargo run --all-features
+    command: cargo build --all-features && gdbserver localhost:1337 ./target/debug/bc-server
     environment:
       - DB_HOST="mariadb"
+      - RUST_LOG=debug
     depends_on:
       - mariadb

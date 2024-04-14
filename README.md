@@ -27,25 +27,22 @@ NB. The functionality described in this section is not yet fully implemented. Co
 - The `modules` folder in the root of the bc-server crate contains all modules.
 - A module is defined as a sub-crate of bc-server. Each modules corresponds to a bc-server crate `feature` and can be enabled/disabled.
   - Ref. [Specifying Dependencies](cargo/reference/specifying-dependencies.html#specifying-path-dependencies)
-- To create a `new-module` module, run `cargo init --template module/example modules/new-module.
-- In modules, copy and rename the `example` directory.
-  - Rename `example/example.rs`
+    <>
+- In the `modules` directory, copy and rename the `example` directory.
+  - Add dependencies to your module's Cargo.toml .
   - Ensure that you fill in the following required module functions in `example.rs`:
     - `make_routes()`: This function generates the routes that will be exposed by your module.
     - `start_server()`:
       - Put any startup code required by your module here e.g. initializing a database.
       - Check for and configure any required dependencies here.
-- In modules/mod.rs, change `mod example` to refer to the name of your module from the previous step.
-- Run `cargo add example-crate` and replace `example-crate` with the name(s) of the crate(s) that your module will use for its functionality.
-  - @todo Modules will be server crate `features` with all dependencies specified with the feature.
+- Add your module as a dependeny in `bc-server`'s [Cargo.toml](/Cargo.toml).
 
 ## Modules
 
 The following modules are implemented:
 
-- [x] bc-depository API:
-  - uses blockchaincommons/bc-depo-rust for secure storage and retrieval of binary objects.
-  - bc-server is based on the bc-depo-rust codebase.
+- [x] depo:
+  - uses [blockchaincommons/bc-depo-rust](https://github.com/blockchaincommons/bc-depo-rust) for secure storage and retrieval of binary objects.
 
 The following APIs are work-in-progress:
 
@@ -57,8 +54,16 @@ The following APIs are work-in-progress:
 
 ```sh
 docker compose up
-curl -vv  127.0.0.1:5332/api/status
 ```
+
+OR
+
+```sh
+docker compose run -it --service-ports bcserver bash
+
+```
+
+Then verify that you can connect to the API: `curl -vv 127.0.0.1:5332/api/status`
 
 The output log of `docker compose` contains information on what ports and services are running.
 
@@ -75,8 +80,10 @@ The output log of `docker compose` contains information on what ports and servic
 - During compilation you might have to wrestle with: <https://users.rust-lang.org/t/error-e0635-unknown-feature-stdsimd/106445/2>
 
 ```
-  Error[E0635]: unknown feature `stdsimd`
-  --> /home/nik/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ahash-0.8.3/src/lib.rs:99:4
+
+Error[E0635]: unknown feature `stdsimd`
+--> /home/nik/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ahash-0.8.3/src/lib.rs:99:4
+
 ```
 
 - To fix:
@@ -85,19 +92,37 @@ The output log of `docker compose` contains information on what ports and servic
 
 ---
 
-## Additional Information
+<!-- ## Additional Information
 
 The following files contain…
 
 - `$ListOfEssentialDocs`
+-->
 
-## Installation Instructions
+<!-- ## Installation Instructions -->
 
 ## Usage Instructions
 
+- From within the bc-server directory run:
+
+```sh
+docker compose up
+```
+
+OR
+
+```sh
+docker compose run -it --service-ports bcserver bash
+
+```
+
+Then verify that you can connect to the API: `curl -vv 127.0.0.1:5332/api/status`
+
+The output log of `docker compose` contains information on what ports and services are running.
+
 ## Gordian Principles
 
-` $projectname` is a reference implementation meant to display the [Gordian Principles](https://github.com/BlockchainCommons/Gordian#gordian-principles), which are philosophical and technical underpinnings to Blockchain Commons' Gordian technology. This includes:
+` bc-server` is a reference implementation meant to display the [Gordian Principles`](https://github.com/BlockchainCommons/Gordian#gordian-principles), which are philosophical and technical underpinnings to Blockchain Commons' Gordian technology. This includes:
 
 - **Independence.** `how does it demonstrate independence`
 - **Privacy.** `how does it demonstrate privacy`
@@ -110,7 +135,7 @@ Blockchain Commons apps do not phone home and do not run ads. Some are available
 
 ## Status - Alpha
 
-` $projectname` is currently under active development and in the alpha testing phase. It should not be used for production tasks until it has had further testing and auditing. See [Blockchain Commons' Development Phases](https://github.com/BlockchainCommons/Community/blob/master/release-path.md).
+` bc-server` is currently under active development and in the alpha testing phase. It should not be used for production tasks until it has had further testing and auditing. See [Blockchain Commons' Development Phases](https://github.com/BlockchainCommons/Community/blob/master/release-path.md).
 
 ### Version History
 
@@ -130,7 +155,7 @@ This table below also establishes provenance (repository of origin, permalink, a
 
 ### Dependencies
 
-To build `$projectname` you'll need to use the following tools:
+To build `bc-server` you'll need to use the following tools:
 
 - autotools - Gnu Build System from Free Software Foundation ([intro](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html)).
 
@@ -140,29 +165,26 @@ Other prerequisites include:
 
 ### Libraries
 
-The following external libraries are used with `$projectname`:
-
-- [community/repo-name](https://github.com/community/repo-name) — What the library does (use OR fork [version] OR include [version]).
-
-Libraries may be marked as `use` (the current version of the library is used), `fork` (a specific version has been forked to the BCC repos for usage), or `include` (files from a specific version have been included).
+Libraries used in bc-server are listed in the [Cargo.toml](/Cargo.toml).
 
 ### Derived from ...
 
-This `$projectname` project is either derived from or was inspired by:
+This `bc-server` project is either derived from:
 
-- [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com).
+- [blockchaincommons/bc-depo-rust](https://github.com/blockchaincommons/bc-depo-rust).
 
+<!--
 ## Subsequent Usage
 
 ### Adapted by ...
 
-These are adaptations, conversions, and wrappers that make `$projectname` available for other languages:
+These are adaptations, conversions, and wrappers that make `bc-server` available for other languages:
 
 - [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com)(language).
 
 ### Used by ...
 
-These are other projects that directly use `$projectname`:
+These are other projects that directly use `bc-server`:
 
 - [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com)(use OR fork [version] OR include [version]).
 
@@ -170,23 +192,27 @@ Libraries may be marked as `use` (the current version of our repo is used), `for
 
 ### Used with ...
 
-These are other projects that work with or leverage `$projectname`:
+These are other projects that work with or leverage `bc-server`:
 
 - [community/repo-name/](https://github.com/community/repo-name) — Repo that does what, by [developer](https://github.com/developer) or from [community](https://community.com).
 
+-->
+
 ## Financial Support
 
-`$projectname` is a project of [Blockchain Commons](https://www.blockchaincommons.com/). We are proudly a "not-for-profit" social benefit corporation committed to open source & open development. Our work is funded entirely by donations and collaborative partnerships with people like you. Every contribution will be spent on building open tools, technologies, and techniques that sustain and advance blockchain and internet security infrastructure and promote an open web.
+`bc-server` is a project of [Blockchain Commons](https://www.blockchaincommons.com/). We are proudly a "not-for-profit" social benefit corporation committed to open source & open development. Our work is funded entirely by donations and collaborative partnerships with people like you. Every contribution will be spent on building open tools, technologies, and techniques that sustain and advance blockchain and internet security infrastructure and promote an open web.
 
-To financially support further development of `$projectname` and other projects, please consider becoming a Patron of Blockchain Commons through ongoing monthly patronage as a [GitHub Sponsor](https://github.com/sponsors/BlockchainCommons). You can also support Blockchain Commons with bitcoins at our [BTCPay Server](https://btcpay.blockchaincommons.com/).
+To financially support further development of `bc-server` and other projects, please consider becoming a Patron of Blockchain Commons through ongoing monthly patronage as a [GitHub Sponsor](https://github.com/sponsors/BlockchainCommons). You can also support Blockchain Commons with bitcoins at our [BTCPay Server](https://btcpay.blockchaincommons.com/).
 
+<!--
 ### Project Sponsors
 
-Thanks to our project sponsors for their support of `$projectname`:
+Thanks to our project sponsors for their support of `bc-server`:
 
 $sponsor-logo-with-link
 
 $sponsor-description
+-->
 
 ## Contributing
 
@@ -216,6 +242,7 @@ The following people directly contributed to this repository. You can add your n
 | Name              | Role                | Github                                           | Email                                 | GPG Fingerprint                                   |
 | ----------------- | ------------------- | ------------------------------------------------ | ------------------------------------- | ------------------------------------------------- |
 | Christopher Allen | Principal Architect | [@ChristopherA](https://github.com/ChristopherA) | \<ChristopherA@LifeWithAlacrity.com\> | FDFE 14A5 4ECB 30FC 5D22 74EF F8D3 6C91 3574 05ED |
+| Nicholas Ochiel   | Principal Architect | [@nochiel](https://github.com/ChristopherA)      | \<nochiel@users.noreply.github.com\>  | 45EA 5C81 9B7E E915 C2A2 7C64 4444 1190 7BE8 83D9 |
 
 ## Responsible Disclosure
 
@@ -234,3 +261,7 @@ The following keys may be used to communicate sensitive information to developer
 | Christopher Allen | FDFE 14A5 4ECB 30FC 5D22 74EF F8D3 6C91 3574 05ED |
 
 You can import a key by running the following command with that individual’s fingerprint: `gpg --recv-keys "<fingerprint>"` Ensure that you put quotes around fingerprints that contain spaces.
+
+```
+
+```

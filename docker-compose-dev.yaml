@@ -1,0 +1,28 @@
+# https://hub.docker.com/_/mariadb
+services:
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    environment:
+      - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1
+    # ports:
+    #   - 3306:3306
+  bcserver:
+    container_name: bcserver
+    build:
+      context: .
+    ports:
+      - 127.0.0.1:5332:5332   # For API
+      - 127.0.0.1:1337:1337   # For gdbserver
+    volumes:
+      - .:/code/bc-server
+      - ../bc-depo-rust-for-use-in-bc-server:/code/bc-depo-rust-for-use-in-bc-server
+      - ../bc-depo-api-rust:/code/bc-depo-api-rust
+    # command: sh -c "cargo build --all-features && gdbserver localhost:1337 target/debug/bc-server"
+    # @note To work in the shell, Use `docker-compose run -it bcserver bash`
+    command: cargo run --all-features
+    environment:
+      - DB_HOST="mariadb"
+      - RUST_LOG=debug,hyper=off
+    depends_on:
+      - mariadb
