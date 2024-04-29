@@ -16,7 +16,6 @@ use log::{debug, error, info, warn};
 const SCHEMA_NAME: &str = "depo";
 pub const API_NAME: &str = "depo";
 
-use bc_server_api::InvalidBodyError;
 use depo::{create_db, reset_db, server_pool, Depo};
 
 
@@ -30,18 +29,13 @@ pub async fn make_routes() -> Router {
     // @fixme Why do we need this new_db call?
     let depo = Depo::new_db(SCHEMA_NAME).await.unwrap();
     Router::new()
-                .route("/", get(|_: State<Depo>| async {}))
-                /*
                 // @fixme
-                .route("/", get(|State(depo): State<Depo>| async {  key_handler(depo) }))
-                .route("/", post(|State(depo): State<Depo>, body: Bytes| async {
-                    // @todo Get request body in bytes.
-                    operation_handler(depo, body)
-                }))
+                .route("/", get( key_handler ))
+                .route("/", post( operation_handler ))
                 .route("reset-db", post(|State(depo): State<Depo>| async {
-                    reset_db_handler(SCHEMA_NAME.to_owned().clone())
+                    reset_db_handler(SCHEMA_NAME.to_owned().clone()).await
                 }))
- */                .with_state(depo.clone())
+                .with_state(depo.clone())
 }
 
 pub async fn start_server() -> anyhow::Result<()> {
@@ -52,7 +46,7 @@ pub async fn start_server() -> anyhow::Result<()> {
 
     Ok(())
 }
-async fn key_handler(depo: Depo) -> impl IntoResponse {
+async fn key_handler(State(depo): State<Depo>) -> impl IntoResponse {
    debug!("key_handler");
    (
         StatusCode::OK,
@@ -60,18 +54,19 @@ async fn key_handler(depo: Depo) -> impl IntoResponse {
     )
 }
 
-async fn operation_handler(depo: Depo, body: Bytes) -> Result<impl IntoResponse, InvalidBodyError> {
+async fn operation_handler(State(depo): State<Depo>,
+    /* Verify that this is how an Extractor works to get the body of the request. */
+    body: Bytes) -> impl IntoResponse
+{
     debug!("operation_handler");
-    let body_string = std::str::from_utf8(&body)
-        .map_err( |e| {
-            // @fixme Return an error response. An unhandled error will crash server.
-            error!("{}", e);
-            e
-        } )?
-        .to_string();
-    let a = depo.handle_request_string(body_string).await;
-
-    Ok((StatusCode::OK, a))
+    match String::from_utf8(body.to_vec()) {
+        Ok(b) => {
+            let result = depo.handle_request_string(b).await;
+            Ok((StatusCode::OK, result))
+        },
+        Err(e) => Err((StatusCode::BAD_REQUEST,
+                        format!("{}", e)))
+    }
 }
 
 // @todo
