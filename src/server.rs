@@ -1,59 +1,68 @@
 use log::info;
 use nu_ansi_term::Color::Green;
-use warp::{
-    filters::BoxedFilter,
-    reject::Rejection,
-    reply::{self, Reply},
-    Filter,
-};
+use axum::{routing::get, Router};
 
+#[cfg(feature = "depo-module")]
 use depo_module;
 
 pub async fn start_server(schema_name: &str, port: u16) -> anyhow::Result<()> {
-    // @todo Loop through all modules and get routes.
-    let routes = make_routes().await;
 
-    let host = "0.0.0.0"; // 127.0.0.1 won't work inside docker.
-    let addr = format!("{}:{}", host, port);
-    let socket_addr = addr.parse::<std::net::SocketAddr>()?;
+    let mut app = Router::new();
+
+    // @todo Loop through all modules and get routes.
+    let module_routes = make_routes().await;
+    app = app.merge(module_routes);
 
     {
+        // call module.start_server for all modules.
+        #[cfg(feature = "depo-module")]
         depo_module::start_server().await;
+
+        #[cfg(feature = "torgap")]
         torgap::start_server().await;
     }
 
-    warp::serve(routes).run(socket_addr).await;
+    let host = "0.0.0.0"; // 127.0.0.1 won't work inside docker.
+    let addr = format!("{}:{}", host, port);
+    let addr = addr.parse::<std::net::SocketAddr>()?;
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }
 
-async fn make_routes() -> BoxedFilter<(impl Reply,)> {
-    let result = {
-        let api = warp::path("api");
-        let status = status_filter();
-        let depo_route = api.and(warp::path(depo_module::API_NAME));
-        let depo_route = depo_route.and(depo_module::make_routes().await);
-        let torgap_route = api.and(warp::path(torgap::API_NAME));
-        let torgap_route = torgap_route.and(torgap::make_routes().await);
-        status.or(depo_route).or(torgap_route)
-    };
+async fn make_routes() -> Router {
 
-    result.boxed()
-}
+    let mut app = status_router();
 
-fn status_filter() -> BoxedFilter<(impl Reply,)> {
-    let api = warp::path("api");
+    #[cfg(feature = "depo-module")]
+    {
+        let depo_routes = depo_module::make_routes().await;
+        app = app.nest("/api", depo_routes);
+    }
 
-    api.and(warp::path!("status"))
-        .and_then(status_handler)
-        .boxed()
+    #[cfg(feature = "torgap")]
+    {
+        let torgap_routes = torgap::make_routes().await;
+        app = app.nest("/api", torgap_routes);
+    }
+
+    // @todo A module returns an axum::Router
+    // Add new router here using a conditional block as above.
+
+    dbg!(&app);
+    app
+
+
 }
 
 // Ref. https://github.com/seanmonstar/warp/blob/master/examples/dyn_reply.rs
-async fn status_handler() -> Result<Box<dyn Reply>, Rejection> {
-    Ok(Box::new(reply::json(&"Server is running")))
+fn status_router() -> Router {
+    Router::new().route("/status", get(|| async { "Server is running".to_string() }))
 }
 
+// @fixme Tests
+/*
 #[tokio::test]
 async fn test_status() {
     let filter = status_filter();
@@ -62,4 +71,7 @@ async fn test_status() {
         .reply(&filter)
         .await;
     assert_eq!(result.status(), 200, "{}", result.status());
+    let app = Router::new().route("")
 }
+
+*/

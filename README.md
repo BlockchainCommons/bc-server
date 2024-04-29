@@ -157,15 +157,15 @@ This table below also establishes provenance (repository of origin, permalink, a
 
 To build `bc-server` you'll need to use the following tools:
 
-- autotools - Gnu Build System from Free Software Foundation ([intro](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html)).
-
-Other prerequisites include:
-
-...
+- `rustup`
+- `cargo`
 
 ### Libraries
 
 Libraries used in bc-server are listed in the [Cargo.toml](/Cargo.toml).
+
+- _Note_ We can no longer use the warp web server library because it's types are recondite and unweildy. In particular, there is no easy way to compose routes based on optional features (https://github.com/seanmonstar/warp/issues/1060).
+  - bc-server implements modules as features therefore we need an easy way to do this without the compiler constantly screaming inscrutable imprecations.
 
 ### Derived from ...
 

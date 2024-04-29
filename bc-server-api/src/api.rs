@@ -1,24 +1,41 @@
-use warp::{
+use axum::{
     http::StatusCode,
-    reject::Rejection,
-    reply::{self, Reply},
+    response::{IntoResponse, Response},
 };
+use anyhow;
 
 pub const MAX_DATA_SIZE: u32 = 1000;
 pub const CONTINUATION_EXPIRY_SECONDS: u32 = 60 * 60 * 24;
 
 // API
-pub mod types {
-    /*
-    pub type Routes =
-        impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone;
-    */
+#[derive(Debug)]
+pub struct InvalidBodyError(anyhow::Error);
+impl IntoResponse for InvalidBodyError {
+    fn into_response(self) -> Response {
+        (
+            StatusCode::BAD_REQUEST,
+            format!("The request body was not formatted corectly: {}", self.0),
+        ).into_response()
+    }
 }
 
-#[derive(Debug)]
-pub struct InvalidBody;
-impl warp::reject::Reject for InvalidBody {}
+/*
+use std::error::Error;
+impl Error for InvalidBodyError {}
 
-#[derive(Debug)]
-pub struct AnyhowError(anyhow::Error);
-impl warp::reject::Reject for AnyhowError {}
+use std::fmt;
+impl fmt::Display for InvalidBodyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+*/
+
+impl<E> From<E> for InvalidBodyError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
+    }
+}
