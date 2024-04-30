@@ -28,14 +28,14 @@ pub async fn make_routes() -> Router {
     create_db(&server_pool(), SCHEMA_NAME).await;
     // @fixme Why do we need this new_db call?
     let depo = Depo::new_db(SCHEMA_NAME).await.unwrap();
-    Router::new()
-                // @fixme
-                .route("/", get( key_handler ))
-                .route("/", post( operation_handler ))
-                .route("reset-db", post(|State(depo): State<Depo>| async {
-                    reset_db_handler(SCHEMA_NAME.to_owned().clone()).await
-                }))
-                .with_state(depo.clone())
+
+    let api_routes = Router::new()
+                        .route("/", get(key_handler).post(operation_handler))
+                        .route("/reset-db", post(|State(depo): State<Depo>| async {
+                            reset_db_handler(SCHEMA_NAME.to_owned().clone()).await
+                        }))
+                        .with_state(depo.clone());
+    Router::new().nest(format!("/{}", API_NAME).as_str(), api_routes)
 }
 
 pub async fn start_server() -> anyhow::Result<()> {
