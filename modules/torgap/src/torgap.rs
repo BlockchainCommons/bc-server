@@ -1,62 +1,72 @@
 // Ref. https://github.com/BlockchainCommons/torgap-demo/blob/master/StackScript/torgap-demo.sh
-use log::info;
-use nu_ansi_term::Color::Green;
-use warp::{
-    filters::BoxedFilter,
-    http::StatusCode,
-    reject::Rejection,
-    reply::{self, Reply},
-    Filter,
+// This StackScript describes all the setup and functionality of the torgap-demo.
+
+use axum::{
+    Router,
+    routing::{get, post},
+    body::Bytes, http::StatusCode,
+    extract::{State, Json},
+    response::IntoResponse
 };
+use log::{debug, error, info, warn};
 
-pub const API_NAME: &str = "torgap";
+use home::cargo_home;
+use serde::{Serialize, Deserialize};
 
-pub async fn make_routes() -> BoxedFilter<(impl Reply,)> {
-    let verify_route = warp::path::end().and_then(verify_handler);
+pub const API_NAME: &str = "torgap-demo";
 
-    let generate_key_route = warp::path::end().and_then(generate_key_handler);
+#[derive(Serialize, Deserialize)]
+struct GenerateDidData {
+    minisign_key: String,
+    document: String
+}
+pub async fn make_routes() -> Router {
+    // @todo Actually define the routes for this API.
+    let verify_route = Router::new().route("/verify", get(verify_handler));
+    let generate_key_route =  Router::new().route("/generate_key", get(generate_key_handler));
 
-    let generate_did_document_route = warp::path::end().and_then(generate_did_document_handler);
+    let generate_did_document_route = Router::new().route("/sign_did",
+        post(generate_did_document_handler));
 
-    let routes = verify_route
-        .or(generate_key_route)
-        .or(generate_did_document_route);
+    let api_routes = Router::new()
+                    .merge(verify_route)
+                    .merge(generate_key_route)
+                    .merge(generate_did_document_route);
+    Router::new().nest(format!("/{}", API_NAME).as_str(), api_routes)
 
-    routes.boxed()
 }
 
 pub async fn start_server() -> anyhow::Result<()> {
+
+    info!("Starting Blockchain Commons Torgap Demo");
+
     // require torgap-sig-cli-rust
     // Ref. https://github.com/BlockchainCommons/torgap-sig-cli-rust
-    /*
     {
-        rsign("");
+        rsign("minisign_key".to_string());
 
+    /*
         // @todo Require opentimestamps-client
         opentimestamp("");
 
         // @todo Start the did-onion tor server.
         start_tor();
-    }
     */
-
-    info!(
-        "{}",
-        Green.paint(format!("Starting Blockchain Commons Torgap Demo"))
-    );
+    }
 
     Ok(())
 }
 
-async fn verify_handler() -> Result<Box<dyn Reply>, Rejection> {
+async fn verify_handler() -> impl IntoResponse {
     unimplemented!();
-    Ok(Box::new(reply::with_status(
-        "Verify document",
+
+    (
         StatusCode::OK,
-    )))
+        "Verify document",
+    )
 }
 
-async fn generate_key_handler() -> Result<Box<dyn Reply>, Rejection> {
+async fn generate_key_handler() -> impl IntoResponse {
     // @todo Use Basic Auth for the password to sign the key.
     /*
     @todo Use torgap-sig-cli-rust to convert minisign secret key to Tor secret key
@@ -65,15 +75,22 @@ async fn generate_key_handler() -> Result<Box<dyn Reply>, Rejection> {
     cargo run generate -s $MINISIGN_SECRET_KEY <<< $MINISIGN_SECRET_KEY_PASSWORD <<< $MINISIGN_SECRET_KEY_PASSWORD
     echo "$0 - minisign secret key generated"
     */
+
+    /*
+    Inputs for initialization
+    MINISIGN_SECRET_KEY
+    MINISIGN_SECRET_KEY_PASSWORD   // "Password used to encrypt/decrypt minisign secret key"
+    */
     unimplemented!();
-    Ok(Box::new(reply::with_status(
-        "Verify document",
+
+    (
         StatusCode::OK,
-    )))
+        "Verify document",
+    )
 }
 
-async fn generate_did_document_handler() -> Result<Box<dyn Reply>, Rejection> {
-    // @todo Use Basic Auth for the password to sign the key.
+async fn generate_did_document_handler(Json(generate_did_data): Json<GenerateDidData>) -> impl IntoResponse {
+    // @fixme Don't transmit the key in cleartext.
     // @todo Generate DID document and expose it on our server.
     // The DID document will be exposed for each user.
     // Should a user be able to expose more than 1 DID?
@@ -85,6 +102,10 @@ async fn generate_did_document_handler() -> Result<Box<dyn Reply>, Rejection> {
 
         cargo run generate -s $MINISIGN_SECRET_KEY <<< $MINISIGN_SECRET_KEY_PASSWORD <<< $MINISIGN_SECRET_KEY_PASSWORD
         echo "$0 - minisign secret key generated"
+    */
+    rsign(generate_did_data.document);
+
+    /*
 
         echo "$0 - exporting keys to Tor format"
         cargo run export-to-onion-keys -s $MINISIGN_SECRET_KEY <<< $MINISIGN_SECRET_KEY_PASSWORD
@@ -103,10 +124,11 @@ async fn generate_did_document_handler() -> Result<Box<dyn Reply>, Rejection> {
 
         */
     unimplemented!();
-    Ok(Box::new(reply::with_status(
-        "Verify document",
+
+    (
         StatusCode::OK,
-    )))
+        "Verify document".to_string(),
+    )
 }
 
 fn export_to_onion_keys() {
@@ -143,15 +165,32 @@ fn get_onion_address() {
 use std::process::Command;
 const TORGAP_CLI_COMMAND: &str = "rsign";
 
-fn rsign(command: &str) {
-    let rsign = Command::new(TORGAP_CLI_COMMAND);
+fn rsign(minisign_key: String) {
+    // Ref. https://github.com/BlockchainCommons/torgap-demo/blob/ed73f1cab8f87093823c452450b9d1fe540ec9f5/StackScript/torgap-demo.sh#L202
+
+    // @todo Use torgap-sig-cli-rust
+    // @todo Use CARGO_PATH or add CARGO_PATH to the dockerfile.
+    use std::path::PathBuf;
+    let path: PathBuf = [cargo_home().unwrap(), "bin".into(), TORGAP_CLI_COMMAND.into()].iter().collect();
+    dbg!(&path);
+    let mut rsign = Command::new(&path);
     assert!(
         !rsign.get_program().is_empty(),
         "{TORGAP_CLI_COMMAND} not found in path"
     );
-    if !command.is_empty() {
-        unimplemented!()
+    let secret_key_path = "@todo";
+    if !minisign_key.is_empty() {
+        let output = rsign.args(["generate", "-s", secret_key_path ] )
+                .output()
+                .expect("rsign failed");
+        dbg!(output);
     }
+}
+
+#[test]
+fn test_rsign() {
+    rsign("0xFFFF");
+    unimplemented!();
 }
 
 const OPENTIMESTAMP_CLIENT: &str = "ots";
@@ -167,5 +206,10 @@ fn opentimestamp(command: &str) {
 }
 
 fn start_tor() {
+    /*
+    TOR_SECRET_KEY
+    TOR_PUBLIC_KEY
+    TOR_HOSTNAME
+     */
     unimplemented!();
 }
