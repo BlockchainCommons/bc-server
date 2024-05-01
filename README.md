@@ -161,6 +161,7 @@ Blockchain Commons apps do not phone home and do not run ads. Some are available
 - [ ] `server.rs` has to be manually updated to include API routes for each module. Instead, server should scan the compiled list of modules and activate their routes.
 - [ ] Add a UI to easily use modules.
   - Modules won't describe their own UI.
+- [ ] `depo-module`: Enable key share recovery using Oauth and Github login.
 
 ## Origin, Authors, Copyright & Licenses
 
