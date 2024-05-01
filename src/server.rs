@@ -20,6 +20,10 @@ pub async fn start_server(schema_name: &str, port: u16) -> anyhow::Result<()> {
 
         #[cfg(feature = "torgap")]
         torgap::start_server().await;
+
+        #[cfg(feature = "example")]
+        example::start_server().await;
+
     }
 
     let host = "0.0.0.0"; // 127.0.0.1 won't work inside docker.
@@ -47,12 +51,14 @@ async fn make_routes() -> Router {
         app = app.nest("/api", torgap_routes);
     }
 
-    // @todo A module returns an axum::Router
-    // Add new router here using a conditional block as above.
+    #[cfg(feature = "example")]
+    {
+        let example_routes = example::make_routes().await;
+        app = app.nest("/api", example_routes);
+    }
 
     dbg!(&app);
     app
-
 
 }
 
