@@ -2,32 +2,30 @@
 
 <!--Guidelines: https://github.com/BlockchainCommons/secure-template/wiki -->
 
-### _by $major-authors_
+### _by Nicholas Ochiel_
 
-**BlockchainCommons Server** (bc-server) is a modular lightweight server codebase for use by BlockchainCommons projects.
+**Blockchain Commons Server** (bc-server) is a modular lightweight server codebase for use by BlockchainCommons projects.
 
-The goal of this project is to allow any BlockchainCommons project to expose its API as a HTTP service in a standardized and easy way. A project can either re-use this code or intergrate with it by adding a module that makes use of the project.
+The goal of this project is to provide re-usable code that any BlockchainCommons project can use to expose its API as a HTTP service in a standardized and easy way. A project can either re-use this code or integrate with it by adding a module that makes use of the project.
 
 BlockchainCommons has several projects as commandline tools which could be made more accessible for testing and useful if a server is running that exposes their functionality.
 
-bc-server will expose its functionality using a JSON-RPC interface.
+bc-server will expose its functionality using a [REST](https://aws.amazon.com/what-is/restful-api/) interface.
 
 To this end, we have the following requirements:
 
-- A BlockchainCommons command line tool should be able to describe a simple manifest specifying
-  - named endpoints (path and parameters)
+- A BlockchainCommons command line tool can describe a simple manifest specifying:
+  - routes: These are named endpoints (path and parameters)
   - the command to be executed when an endpoint is called.
-- The manifest should be written as a rust library and can contain arbitrary logic to process input and generate output.
-  - This library can then be put into a "modules" directory and the server will automatically make its functionality available.
+- The manifest should be written as a Rust crate and can contain arbitrary logic to process input and generate output.
+  - This library can then be put into the `modules` directory and the server will automatically make its functionality available.
 
-## [Work In Progress] The bc-server API (How to write a module for bc-server)
+The immediate use of `bc-server` will be to allow easy testing of the various BlockchainCommons tools. It will be hosted by Blockchain Commons.
 
-NB. The functionality described in this section is not yet fully implemented. Consider it a description of how we want the module development process to work.
+## The bc-server API (How to write a module for bc-server)
 
 - The `modules` folder in the root of the bc-server crate contains all modules.
-- A module is defined as a sub-crate of bc-server. Each modules corresponds to a bc-server crate `feature` and can be enabled/disabled.
-  - Ref. [Specifying Dependencies](cargo/reference/specifying-dependencies.html#specifying-path-dependencies)
-    <>
+- A module is defined as a sub-crate of bc-server. Each module corresponds to a bc-server crate [`feature`](cargo/reference/specifying-dependencies.html#specifying-path-dependencies)and can be enabled/disabled using `cargo build/run`.
 - In the `modules` directory, copy and rename the `example` directory.
   - Add dependencies to your module's Cargo.toml .
   - Ensure that you fill in the following required module functions in `example.rs`:
@@ -35,20 +33,37 @@ NB. The functionality described in this section is not yet fully implemented. Co
     - `start_server()`:
       - Put any startup code required by your module here e.g. initializing a database.
       - Check for and configure any required dependencies here.
-- Add your module as a dependeny in `bc-server`'s [Cargo.toml](/Cargo.toml).
+- To enable bc-server to run the module:
+  - Add your module as a dependeny in `bc-server`'s [Cargo.toml](/Cargo.toml) by copying the `example` dependency.
+  - Add the modules to [server.rs](src/server.rs):
+    - In `server::make_routes` add the lines:
+      ```rust
+      #[cfg(feature = "example")]
+      example::start_server().await;
+      ```
+    - In `server::start_server` copy the lines:
+      ```rust
+      #[cfg(feature = "example")]
+      {
+          let example_routes = example::make_routes().await;
+          app = app.nest("/api", example_routes);
+      }
+      ```
 
 ## Modules
 
 The following modules are implemented:
 
-- [x] depo:
+- [x] `depo-module`:
   - uses [blockchaincommons/bc-depo-rust](https://github.com/blockchaincommons/bc-depo-rust) for secure storage and retrieval of binary objects.
+- [x] `example`: A template module that can be used when making new modules.
 
 The following APIs are work-in-progress:
 
 - [ ] torgap-demo:
-  - Torgap-demo allows a user to sign objects and serve them an onion service.
-- [ ] spotbit
+  - Torgap-demo uses `rsign` allows a user to sign objects which are then served from an ephemeral onion service.
+- [ ] [`spotbit`](htttps://github.com/blockchaincommons/spotbit)
+  - Spotbit is currently a Python application that serves a Bitcoin price feed. It's web-server, in Python, can be deprecated so that it becomes a bc-server module.
 
 ## How to test bc-server
 
@@ -68,6 +83,8 @@ Then verify that you can connect to the API: `curl -vv 127.0.0.1:5332/api/status
 The output log of `docker compose` contains information on what ports and services are running.
 
 ## How to deploy bc-server
+
+- Use the provided [Dockerfile](./Dockerfile)
 
 ## References
 
@@ -140,6 +157,10 @@ Blockchain Commons apps do not phone home and do not run ads. Some are available
 ### Version History
 
 ### Roadmap
+
+- [ ] `server.rs` has to be manually updated to include API routes for each module. Instead, server should scan the compiled list of modules and activate their routes.
+- [ ] Add a UI to easily use modules.
+  - Modules won't describe their own UI.
 
 ## Origin, Authors, Copyright & Licenses
 
