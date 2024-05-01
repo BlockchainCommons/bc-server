@@ -289,6 +289,7 @@ dependencies = [
  "axum",
  "bytes",
  "depo-module",
+ "example",
  "hex",
  "log",
  "nu-ansi-term",
@@ -1001,6 +1002,16 @@ checksum = "a258e46cdc063eb8519c00b9fc845fc47bcfca4130e2f08e88665ceda8474245"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "log",
+ "tokio",
 ]
 
 [[package]]
@@ -2687,18 +2698,18 @@ checksum = "92d43fe69e652f3df9bdc2b85b2854a0825b86e4fb76bc44d945137d053639ca"
 
 [[package]]
 name = "serde"
-version = "1.0.197"
+version = "1.0.199"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fb1c873e1b9b056a4dc4c0c198b24c3ffa059243875552b2bd0933b1aee4ce2"
+checksum = "0c9f6e76df036c77cd94996771fb40db98187f096dd0b9af39c6c6e452ba966a"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.197"
+version = "1.0.199"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7eb0b34b42edc17f6b7cac84a52a1c5f0e1bb2227e997ca9011ea3dd34e8610b"
+checksum = "11bd257a6541e141e42ca6d24ae26f7714887b47e89aa739099104c7e4d3b7fc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3151,13 +3162,15 @@ name = "torgap"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "bc-server-api 0.1.0",
  "bytes",
  "home",
  "log",
  "nu-ansi-term",
+ "serde",
+ "tokio",
  "torgap-sig-cli-rust",
- "warp",
 ]
 
 [[package]]
